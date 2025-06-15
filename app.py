@@ -7,10 +7,19 @@ import numpy as np
 
 
 # Load dataset useed for lookup
-disease_data = pd.read_csv('data/disease_info.csv')
+@st.cache_data
+def load_disease_data():
+    '''Load the disease information dataset from a CSV file.'''
+    return pd.read_csv('data/disease_info.csv')
+disease_data = load_disease_data()
 
 # Load the trained model
-model = joblib.load('random_forest_model.joblib')
+@st.cache_resource
+def load_model():
+    '''Load the pre-trained Random Forest model from a joblib file.'''
+    return joblib.load('random_forest_model.joblib')
+
+model = load_model()
 
 
 # Helper function to get disease information
@@ -46,7 +55,12 @@ st.set_page_config(
 )
     
 # Load symptom names from the CSV file into a list
-symptoms = pd.read_csv('data/SympScan.csv').columns[1:].tolist()
+@st.cache_data
+def load_symptoms():
+    '''Load the list of symptoms from the SympScan dataset CSV file.'''
+    return pd.read_csv('data/SympScan.csv').columns[1:].tolist()
+symptoms = load_symptoms()
+
 # UI (title and autocomplete descriptin)
 st.title("MedOracle: Symptom-Based Disease Predictor")
 st.markdown("Describe your symptoms using the autocomplete below.")
@@ -134,19 +148,21 @@ st.markdown("Created by Shaili Vemuri")
 with st.sidebar:
     st.title("MedOracle: Symptom-Based Disease Predictor")
     st.markdown("Welcome! This AI tool predicts possible diseases based on symptoms.")
-    st.markdown("Enter your symptoms in the input box below. Use the autocomplete feature (tab button) to select symptoms from the list.")
-    st.markdown("Click the 'Predict Disease' button to see the top 3 predicted diseases.")
-    st.markdown("You can click on a disease name to see more details about it, including description, medication, severity, and contagiousness.")
-    st.markdown("The model is trained on a dataset of symptoms and diseases using a Random Forest classifier.")
-    st.markdown("The dataset includes 96,0000 datapoints with 237 different symptoms and 101 different diseases.")
-    st.markdown("---")
+
+    with st.expander("How to Use"):
+        st.markdown("Enter your symptoms in the input box below. Use the autocomplete feature (tab button) to select symptoms from the list.")
+        st.markdown("Click the 'Predict Disease' button to see the top 3 predicted diseases.")
+        st.markdown("You can click on a disease name to see more details about it, including description, medication, severity, and contagiousness.")
+        st.markdown("The model is trained on a dataset of symptoms and diseases using a Random Forest classifier.")
+        st.markdown("The dataset includes 96,0000 datapoints with 237 different symptoms and 101 different diseases.")
+        st.markdown("---")
     
-    st.markdown("### Triage Severity Key")
-    st.markdown("🔴 **Emergency** — Immediate medical attention needed")
-    st.markdown("🟠 **Urgent** — Seek care soon")
-    st.markdown("🟡 **Moderate** — Monitor or consult a doctor")
-    st.markdown("🟢 **Mild** — Home care usually sufficient")
-    st.markdown("---")
+    with st.markdown("### Triage Severity Key")
+        st.markdown("🔴 **Emergency** — Immediate medical attention needed")
+        st.markdown("🟠 **Urgent** — Seek care soon")
+        st.markdown("🟡 **Moderate** — Monitor or consult a doctor")
+        st.markdown("🟢 **Mild** — Home care usually sufficient")
+        st.markdown("---")
     
     st.markdown("**Dataset Source:** Kaggle SympScan Dataset(https://www.kaggle.com/datasets/behzadhassan/sympscan-symptomps-to-disease. Used for all medical data and model training.")
     st.markdown("**Disclaimer:** This tool is for educational purposes only, not medical advice. For any health concerns, please consult a licensed medical professional.")

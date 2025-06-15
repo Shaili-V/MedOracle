@@ -28,7 +28,6 @@ dist/
 # Ignore Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# Ignore random_forest_model.joblib file, which is a saved model trained by the model.py script
-random_forest_model.joblib
+
 
 

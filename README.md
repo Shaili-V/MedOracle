@@ -4,7 +4,7 @@ This is a Streamlit-based AI web application that predicts diseases based on use
 ---
 
 ## Try It Online
-- Launch MedOracle on Streamlit Cloud: https://medoracle.streamlit.app/
+- Launch MedOracle on Streamlit Cloud: https://medoracle.streamlit.app
 
 ## Features
 - **Symptom Autocomplete Input**
