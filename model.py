@@ -86,5 +86,5 @@ print(classification_report(y_test, y_pred))
 # SAVING THE MODEL:
 
 # Save the trained model to a file
-joblib.dump(rf, 'random_forest_model.joblib')
+joblib.dump(rf, 'random_forest_model.joblib', compress=3)
 

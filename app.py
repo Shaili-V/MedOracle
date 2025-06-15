@@ -3,14 +3,7 @@ from streamlit_tags import st_tags
 import pandas as pd
 import joblib
 import numpy as np
-import os
-import gdown
 
-model_url = "https://drive.google.com/uc?id=1pUfTbNJfCWjoc7r-R-DsH7DMKJUyhJ0z"
-model_path = "random_forest_model.joblib"
-
-if not os.path.exists(model_path):
-    gdown.download(model_url, model_path, quiet=False)
 
 
 # Load dataset useed for lookup
@@ -157,7 +150,7 @@ with st.sidebar:
     
     st.markdown("**Dataset Source:** Kaggle SympScan Dataset(https://www.kaggle.com/datasets/behzadhassan/sympscan-symptomps-to-disease. Used for all medical data and model training.")
     st.markdown("**Disclaimer:** This tool is for educational purposes only, not medical advice. For any health concerns, please consult a licensed medical professional.")
-    st.markdown("For more information, visit [GitHub Repository]")
+    st.markdown("For more information, visit https://github.com/Shaili-V/MedOracle")
     st.markdown("---")
 
     with st.expander("🔍 View All Available Symptoms"):
