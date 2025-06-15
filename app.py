@@ -71,7 +71,7 @@ selected_symptoms = st_tags(
     value = [],
     suggestions = symptoms,
     maxtags = 30,
-    key = "1"
+    key = "symptom_input"
 )
 
 # Initialize session state keys if they don't exist
@@ -86,14 +86,15 @@ if not st.session_state.show_disease_info:
         if not selected_symptoms:
             st.warning("Please enter at least one symptom.")
         else:
-            # Create the binary input vector
-            input_vector = [1 if symptom in selected_symptoms else 0 for symptom in symptoms]
-            # Predict probabilities for all disease classes
-            probabilities = model.predict_proba([input_vector])[0]
-            # Get top 3 predictions and their probabilities
-            top_indices = sorted(range(len(probabilities)), key=lambda i: probabilities[i], reverse=True)[:3]
-            top_diseases = [(model.classes_[i], probabilities[i]) for i in top_indices]
-            st.session_state.top_diseases = top_diseases
+            with st.spinner("Predicting diseases..."):
+                # Create the binary input vector
+                input_vector = [1 if symptom in selected_symptoms else 0 for symptom in symptoms]
+                # Predict probabilities for all disease classes
+                probabilities = model.predict_proba([input_vector])[0]
+                # Get top 3 predictions and their probabilities
+                top_indices = sorted(range(len(probabilities)), key=lambda i: probabilities[i], reverse=True)[:3]
+                top_diseases = [(model.classes_[i], probabilities[i]) for i in top_indices]
+                st.session_state.top_diseases = top_diseases
     top_diseases = st.session_state.get("top_diseases",[])
     if top_diseases:
         st.subheader("Top 3 Predicted Diseases:")
@@ -110,35 +111,39 @@ else: # If in disease info mode, show details for the selected disease
     disease_name = st.session_state.selected_disease
     info = get_disease_info(disease_name)
     if info:
-        #title
-        st.header(disease_name)
+        with st.spinner("Loading disease information..."):
+            #title
+            st.header(disease_name)
 
-        # Color- cded severity badge
-        severity = info['severity'].lower()
-        severity_colors = {
-            "mild": "🟢 Mild-- Self-care",
-            "moderate": "🟡 Moderate-- Routine visit",
-            "urgent": "🟠 Urgent-- Same-day visit",
-            "emergency": "🔴 Emergency-- Go to ER"
-        }
-        severity_tag = severity_colors.get(severity, severity.title())
+            # Color- cded severity badge
+            severity = info['severity'].lower()
+            severity_colors = {
+                "mild": "🟢 Mild-- Self-care",
+                "moderate": "🟡 Moderate-- Routine visit",
+                "urgent": "🟠 Urgent-- Same-day visit",
+                "emergency": "🔴 Emergency-- Go to ER"
+            }
+            severity_tag = severity_colors.get(severity, severity.title())
 
-        # Contagiousness badge
-        contagious_icon = "🟢 Not Contagious"
-        if info['contagious'].lower() == "yes":
-            contagious_icon = "⚠️ Contagious"
-        elif info['contagious'].lower() == "sometimes":
-            contagious_icon = "🟡 Sometimes Contagious"
+            # Contagiousness badge
+            contagious_icon = "🟢 Not Contagious"
+            if info['contagious'].lower() == "yes":
+                contagious_icon = "⚠️ Contagious"
+            elif info['contagious'].lower() == "sometimes":
+                contagious_icon = "🟡 Sometimes Contagious"
 
-        # display info
-        st.markdown(f"**📝 Description:** {info['description']}")
-        st.markdown(f"**💊 Medication:** {info['medication']}")
-        st.markdown(f"**🚨 Severity:** {severity_tag}")
-        st.markdown(f"**🦠 Contagiousness:** {contagious_icon}")
+            # display info
+            st.markdown(f"**📝 Description:** {info['description']}")
+            st.markdown(f"**💊 Medication:** {info['medication']}")
+            st.markdown(f"**🚨 Severity:** {severity_tag}")
+            st.markdown(f"**🦠 Contagiousness:** {contagious_icon}")
     else:
         st.error("No information found for this disease.")
     
-    st.button("Back to Predictions", on_click=go_back)
+    if st.button("Back to Predictions"):
+        with st.spinner("Returning to predictions..."):
+            go_back()
+
 
 # Footer
 st.markdown("---")
@@ -155,20 +160,19 @@ with st.sidebar:
         st.markdown("You can click on a disease name to see more details about it, including description, medication, severity, and contagiousness.")
         st.markdown("The model is trained on a dataset of symptoms and diseases using a Random Forest classifier.")
         st.markdown("The dataset includes 96,0000 datapoints with 237 different symptoms and 101 different diseases.")
-        st.markdown("---")
     
-    with st.markdown("### Triage Severity Key")
+    with st.expander("🔍 View All Available Symptoms"):
+        st.markdown("\n".join([f"- {s}" for s in sorted(symptoms)]))  
+
+    with st.expander("Triage Severity Key"):
         st.markdown("🔴 **Emergency** — Immediate medical attention needed")
         st.markdown("🟠 **Urgent** — Seek care soon")
         st.markdown("🟡 **Moderate** — Monitor or consult a doctor")
         st.markdown("🟢 **Mild** — Home care usually sufficient")
-        st.markdown("---")
+        
+    with st.expander("More Info"):
+        st.markdown("**Dataset Source:** Kaggle SympScan Dataset(https://www.kaggle.com/datasets/behzadhassan/sympscan-symptomps-to-disease. Used for all medical data and model training.")
+        st.markdown("**Disclaimer:** This tool is for educational purposes only, not medical advice. For any health concerns, please consult a licensed medical professional.")
+        st.markdown("For more information, visit https://github.com/Shaili-V/MedOracle")
     
-    st.markdown("**Dataset Source:** Kaggle SympScan Dataset(https://www.kaggle.com/datasets/behzadhassan/sympscan-symptomps-to-disease. Used for all medical data and model training.")
-    st.markdown("**Disclaimer:** This tool is for educational purposes only, not medical advice. For any health concerns, please consult a licensed medical professional.")
-    st.markdown("For more information, visit https://github.com/Shaili-V/MedOracle")
-    st.markdown("---")
-
-    with st.expander("🔍 View All Available Symptoms"):
-        for s in sorted(symptoms):
-            st.markdown(f"- {s}")
+    
