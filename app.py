@@ -4,13 +4,20 @@ import pandas as pd
 import joblib
 import numpy as np
 
-
+# Set page configuration
+st.set_page_config(
+    page_title="MedOracle: Symptom-Based Disease Predictor",
+    page_icon="🩺",
+    layout="wide"
+)
 
 # Load dataset useed for lookup
 @st.cache_data
 def load_disease_data():
     '''Load the disease information dataset from a CSV file.'''
-    return pd.read_csv('data/disease_info.csv')
+    df = pd.read_csv('data/disease_info.csv')
+    df["Disease_lower"] = df["Disease"].str.lower()
+    return df
 disease_data = load_disease_data()
 
 # Load the trained model
@@ -26,7 +33,7 @@ model = load_model()
 def get_disease_info(disease_name):
     '''Look up and return the description, medication, severity, and contagiousness
       for a given disease name from the disease_data DataFrame.'''
-    row = disease_data[disease_data['Disease'].str.lower() == disease_name.lower()]
+    row = disease_data[disease_data['Disease_lower'] == disease_name.lower()]
     if not row.empty:
         return {
         'description' : row.iloc[0]["Description"],
@@ -46,20 +53,21 @@ def make_callback(disease_name):
 def go_back():
     st.session_state.show_disease_info = False
     st.session_state.selected_disease = None
-
-# Set page configuration
-st.set_page_config(
-    page_title="MedOracle: Symptom-Based Disease Predictor",
-    page_icon="🩺",
-    layout="wide"
-)
     
 # Load symptom names from the CSV file into a list
-@st.cache_data
+@st.cache_resource
 def load_symptoms():
     '''Load the list of symptoms from the SympScan dataset CSV file.'''
     return pd.read_csv('data/SympScan.csv').columns[1:].tolist()
 symptoms = load_symptoms()
+
+# Initialize session state keys if they don't exist
+if 'show_disease_info' not in st.session_state:
+    st.session_state.show_disease_info = False
+if 'selected_disease' not in st.session_state:
+    st.session_state.selected_disease = None
+if 'selected_symptoms' not in st.session_state:
+    st.session_state.selected_symptoms = []
 
 # UI (title and autocomplete descriptin)
 st.title("MedOracle: Symptom-Based Disease Predictor")
@@ -68,17 +76,13 @@ st.markdown("Describe your symptoms using the autocomplete below.")
 selected_symptoms = st_tags(
     label = "Enter Symptoms:",
     text = "Type and press enter",
-    value = [],
+    value = st.session_state.selected_symptoms,
     suggestions = symptoms,
     maxtags = 30,
     key = "symptom_input"
 )
 
-# Initialize session state keys if they don't exist
-if 'show_disease_info' not in st.session_state:
-    st.session_state.show_disease_info = False
-if 'selected_disease' not in st.session_state:
-    st.session_state.selected_disease = None
+
 # If in normal prediction mode, show top 3 diseases
 if not st.session_state.show_disease_info:
     # Predict button
@@ -103,9 +107,8 @@ if not st.session_state.show_disease_info:
             with cols[i]:
                 st.markdown(f"<u><b>{disease}</b></u>", unsafe_allow_html=True)
                 st.markdown(f"Confidence: {prob:.2%}")
-                if st.button("View Info", key=f"view_{i}", on_click=make_callback(disease)):
-                    st.session_state.selected_disease = disease
-                    st.session_state.show_disease_info = True
+                st.button("View Info", key=f"view_{i}", on_click=make_callback(disease))
+                    
           #  st.button(f"{disease} -- Confidence: ({prob:.2%})", on_click=make_callback(disease), key=disease)
 else: # If in disease info mode, show details for the selected disease
     disease_name = st.session_state.selected_disease
@@ -115,7 +118,7 @@ else: # If in disease info mode, show details for the selected disease
             #title
             st.header(disease_name)
 
-            # Color- cded severity badge
+            # Color- coded severity badge
             severity = info['severity'].lower()
             severity_colors = {
                 "mild": "🟢 Mild-- Self-care",
@@ -140,9 +143,8 @@ else: # If in disease info mode, show details for the selected disease
     else:
         st.error("No information found for this disease.")
     
-    if st.button("Back to Predictions"):
-        with st.spinner("Returning to predictions..."):
-            go_back()
+    st.button("Back to Predictions", on_click=go_back)
+        
 
 
 # Footer
